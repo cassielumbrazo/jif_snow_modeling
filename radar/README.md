@@ -7,6 +7,9 @@
 - [02_radar_hrrrak_dem_coverage.ipynb](02_radar_hrrrak_dem_coverage.ipynb): overlay
   radar tracks, the WY2021 HRRR-AK grid, and the six-tile DEM bounding box; check
   valid-data coverage and group radar locations into candidate forcing cells.
+  It also selects one eligible radar point nearest each cell centre, maps the
+  proposed sites and their offsets from forcing centres, and exports candidate
+  site IDs, coordinates, elevation differences, and per-cell eligibility counts.
   The editable May 2021 timestamp is illustrative until survey dates are known.
 
 Source data are stored outside Git at `/hdd/snow_hydrology/JIF_radar`.
