@@ -1,5 +1,14 @@
 # Radar analysis
 
+## Notebooks
+
+- [01_explore_radar_2021.ipynb](01_explore_radar_2021.ipynb): inspect radar data
+  quality, profiles, distributions, and track maps.
+- [02_radar_hrrrak_dem_coverage.ipynb](02_radar_hrrrak_dem_coverage.ipynb): overlay
+  radar tracks, the WY2021 HRRR-AK grid, and the six-tile DEM bounding box; check
+  valid-data coverage and group radar locations into candidate forcing cells.
+  The editable May 2021 timestamp is illustrative until survey dates are known.
+
 Source data are stored outside Git at `/hdd/snow_hydrology/JIF_radar`.
 The initial inventory on 2026-10-28 is:
 
@@ -38,3 +47,11 @@ model validation.
 Keep new inspection, mapping, and comparison notebooks here. Leave the source
 files unchanged; put local derived datasets in `data/` and plots in `figures/`
 under this folder, both ignored by Git.
+
+The HRRR coverage notebook reads
+`/hdd/snow_hydrology/hrrrak/icefield_domain/netcdf/hrrrak_merged_grib_f567_WY2021_utm.nc`
+and the clean `jif_tiles_utm8n_20m.tif` DEM. It reports actual stored grid spacing
+and uses cell-edge bounds, rather than equating coordinate-centre bounds with
+coverage. Candidate cell IDs refer to the stored reprojected UTM grid, with
+indices sorted west-to-east and south-to-north. They are not native HRRR cell
+identifiers or final point-model site selections.

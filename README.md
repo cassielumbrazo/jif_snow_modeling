@@ -24,11 +24,14 @@ See [environment setup](envs/README.md) to recreate the environment.
 
 ## Existing workflow
 
-1. Use `jif_domain/1_open_single_grib_file.ipynb` to inspect HRRR-AK fields,
-   then `1_process_hrrrak_grib_files.ipynb` to process the selected water years.
-   `1_combine_arctic_dem_tiles.ipynb` prepares terrain data separately.
-2. Use `jif_domain/2_merge_netcdfs.ipynb` to merge water years and extract
-   point data. The `3_icefield_domain_*` notebooks map the domain and sites.
+1. Use `jif_domain/01_open_single_grib_file.ipynb` to inspect HRRR-AK fields,
+   then `01_process_hrrrak_grib_files.ipynb` to process the selected water years.
+   `01_combine_arctic_dem_tiles.ipynb` prepares terrain data separately.
+   See [terrain preparation and coverage notes](jif_domain/README.md) for the
+   six-tile mosaic workflow, radar coverage checks, and shaded terrain
+   maps with basemap context.
+2. Use `jif_domain/02_merge_netcdfs.ipynb` to merge water years and extract
+   point data. The `03_icefield_domain_*` notebooks map the domain and sites.
 3. Use each site's `2_create_snowpack_smet_forcing_*` notebooks to prepare SMET
    forcing. Choose the intended water-year variant rather than running all
    variants as a sequence.
@@ -46,7 +49,8 @@ remain under `/hdd/snow_hydrology/hrrrak/`, and terrain inputs under
 `/hdd/snow_hydrology/DEMs/`. Large source data and model outputs are not copied
 into this repository.
 
-Imported notebooks retain their original code, saved outputs, and paths.
+Most imported notebooks still use their original paths. The terrain merge and
+viewing notebooks use the mosaic products documented in `jif_domain/README.md`.
 **Check input and export paths before executing cells.** Forcing notebooks still
 write into the original `run_snowpack` tree, and analysis notebooks read its
 outputs. Older TKG4 variants reference `large_juneau_domain` and use a mix of
