@@ -1,0 +1,18 @@
+# Python and notebook caches
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+
+# Local datasets and generated products (source data remain on /hdd)
+data/
+output/
+outputs/
+figures/
+*.nc
+*.nc4
+*.grib
+*.grib2
+*.idx
+*.tif
+*.tiff
