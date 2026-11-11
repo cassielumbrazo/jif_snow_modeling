@@ -16,3 +16,10 @@ figures/
 *.idx
 *.tif
 *.tiff
+
+# Generated figure exports
+*.png
+*.pdf
+*.jpg
+*.jpeg
+*.svg

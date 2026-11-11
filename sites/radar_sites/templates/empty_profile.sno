@@ -1,0 +1,29 @@
+SMET 1.1 ASCII
+[HEADER]
+station_id       = hrrrak_tkg4_WY2020-WY2025
+station_name     = HRRR-AK TKG4 Point Forcing
+latitude         = 58.634470
+longitude        = -134.237080
+easting          = 544294.565
+northing         = 6499603.015
+epsg             = 32608
+altitude         = 1120
+nodata           = -999
+tz               = 0
+source           = HRRR point extraction
+ProfileDate      = 2019-10-10T05:00
+HS_Last          = 0.0000
+SlopeAngle       = 38.0
+SlopeAzi         = 0.0
+nSoilLayerData   = 0
+nSnowLayerData   = 0
+SoilAlbedo       = 0.4
+BareSoil_z0      = 0.200
+CanopyHeight     = 0.00
+CanopyLeafAreaIndex = 0.00
+CanopyDirectThroughfall = 1.00
+WindScalingFactor = 1.00
+ErosionLevel     = 0
+TimeCountDeltaHS = 0.000000
+fields           = timestamp Layer_Thick  T  Vol_Frac_I  Vol_Frac_W  Vol_Frac_V  Vol_Frac_S Rho_S Conduc_S HeatCapac_S  rg  rb  dd  sp  mk mass_hoar ne CDot metamo
+[DATA]
