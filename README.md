@@ -7,40 +7,37 @@ and TKG4 workflows in
 
 | Folder | Purpose |
 | --- | --- |
-| `sites/mld4/` | MLD4 forcing preparation and model-output analysis |
-| `sites/tkg4/` | TKG4 forcing preparation and model-output analysis |
-| `sites/radar_sites/` | Five-site forcing review, model execution, and pit/radar comparison |
-| `jif_domain/` | Existing shared HRRR-AK processing, DEM preparation, point extraction, and domain maps |
-| `radar/` | Radar data inventory, exploration notebook, and point maps |
+| `sites/mld4/notebooks/` | MLD4 forcing preparation and model-output analysis |
+| `sites/tkg4/notebooks/` | TKG4 forcing preparation and model-output analysis |
+| `sites/radar_sites/` | Shared site notebooks, scripts, notes, templates, and numerical guard |
+| `jif_domain/` | HRRR-AK processing, terrain preparation, and domain maps |
+| `radar/` | Radar exploration, data inventory, and maps |
 | `envs/` | JIF Python environment snapshot and setup instructions |
 | `docs/` | Import provenance |
 
-Keep shared radar-site forcing and analysis in `sites/radar_sites/`; its
-[combined site notes](sites/radar_sites/site_summary.md) document every radar site.
-The older MLD4 and TKG4 work remains in its existing folders. Keep processing shared across sites in `jif_domain/`.
-Add a distributed modeling folder when that work begins.
+The [combined site notes](sites/radar_sites/site_summary.md) document every radar site.
 
 ## Radar pit simulations
 
-The five-site workflow is in [`sites/radar_sites/`](sites/radar_sites/):
+The five-site notebooks are in [`sites/radar_sites/notebooks/`](sites/radar_sites/notebooks/):
 
-1. [Review forcing and site elevations](sites/radar_sites/01_review_radar_site_forcing.ipynb):
+1. [Review forcing and site elevations](sites/radar_sites/notebooks/01_review_radar_site_forcing.ipynb):
    reads the existing raw and temperature-corrected forcing, shows a site map,
    and compares temperatures without regenerating inputs.
-2. [Compare models, pits, and radar](sites/radar_sites/02_compare_model_pit_radar_WY2021.ipynb):
+2. [Compare models, pits, and radar](sites/radar_sites/notebooks/02_compare_model_pit_radar_WY2021.ipynb):
    loads all ten runs, audits their common coverage, and compares WY2021
    depth/SWE with the archived pit sheets and nearby radar observations. Final
    tables report signed depth differences and mean absolute differences by
    simulation and observation source, with one overall mean absolute difference.
+3. [Compare bulk snow density](sites/radar_sites/notebooks/03_compare_bulk_snow_density_WY2021.ipynb)
+   compares the July pit estimates with daily modeled bulk densities.
 
-Use the **JIF snow modeling** kernel. The former site-specific forcing notebooks
-have been consolidated into the forcing review notebook. Reusable preparation,
-run, and comparison scripts live beside these notebooks.
+Use the **JIF snow modeling** kernel. Run the commands below from the repository root.
 
 ```bash
-python sites/radar_sites/prepare_radar_site_forcing.py
-python sites/radar_sites/run_radar_sites.py
-python sites/radar_sites/compare_model_pit_radar.py
+python sites/radar_sites/scripts/prepare_radar_site_forcing.py
+python sites/radar_sites/scripts/run_radar_sites.py
+python sites/radar_sites/scripts/compare_model_pit_radar.py
 ```
 
 Preparation reuses and validates complete existing inputs. It refuses to
@@ -97,7 +94,7 @@ See [environment setup](envs/README.md) to recreate the environment.
    maps with basemap context.
 2. Use `jif_domain/02_merge_netcdfs.ipynb` to merge water years and extract
    point data. The `03_icefield_domain_*` notebooks map the domain and sites.
-3. Use each site's `2_create_snowpack_smet_forcing_*` notebooks to prepare SMET
+3. Use each site's `notebooks/` folder for its `2_create_snowpack_smet_forcing_*` notebooks to prepare SMET
    forcing. Choose the intended water-year variant rather than running all
    variants as a sequence.
 4. Run SNOWPACK separately using the model-run setup in
@@ -142,7 +139,7 @@ TKG4 results are preserved for the historical pit/radar comparison notebooks.
 
 ## Visualization conventions
 
-Use `sites/radar_sites/visualization.py` for the shared plotting settings:
+Use `sites/radar_sites/scripts/visualization.py` for the shared plotting settings:
 **HRRR-AK Raw** is maroon and **HRRR-AK Lapserate** is royalblue. Total snow/firn depth is faded and dashed; autumn-minimum-adjusted
 depth is solid. Both use thicker lines. Observations
 are black: circles for snow pits and squares for radar. Comparison legends

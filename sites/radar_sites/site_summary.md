@@ -16,16 +16,17 @@ Distances are horizontal UTM distances to the nearest **recorded radar sample**,
 
 TKG4 depth was observed on July 7 and density/SWE on July 8; its radar date is July 13. TKG3's archived July 9 pit date differs from the supplied Table 1 ground-truth date. TKG2 and DG1 radar dates remain unresolved; their campaign window is not an exact acquisition date.
 
-Regenerate this table with `python sites/radar_sites/site_metadata.py` after changing site metadata.
+Regenerate this table with `python sites/radar_sites/scripts/site_metadata.py` after changing site metadata.
 
 
 ## Shared workflow and model locations
 
 All five radar sites (DG1, TKG4, TKG3, TKG2, and C161) use the same workflow:
 
-- [Review forcing and site elevations](01_review_radar_site_forcing.ipynb).
-- [Compare model depth/SWE with pits and radar](02_compare_model_pit_radar_WY2021.ipynb).
-- Prepare or reuse forcing with `prepare_radar_site_forcing.py`; run simulations with `run_radar_sites.py`.
+- [Review forcing and site elevations](notebooks/01_review_radar_site_forcing.ipynb).
+- [Compare model depth/SWE with pits and radar](notebooks/02_compare_model_pit_radar_WY2021.ipynb).
+- [Compare bulk snow density](notebooks/03_compare_bulk_snow_density_WY2021.ipynb).
+- Prepare or reuse forcing with [the forcing script](scripts/prepare_radar_site_forcing.py) and run simulations with [the batch runner](scripts/run_radar_sites.py).
 
 Inputs, configurations, logs, and results remain outside this repository at
 `/home/cassie/python/models/run_snowpack/sites/<site>/`, where `<site>` is
@@ -38,5 +39,5 @@ DG1 is the Demorest Branch pit on Taku Glacier, with a recorded elevation of
 TKG4 retains its established model point and configuration; the table above
 records the pit/model elevation difference and separation explicitly.
 
-The repository retains `sites/mld4/` and `sites/tkg4/` for their older forcing
+The repository retains `sites/mld4/notebooks/` and `sites/tkg4/notebooks/` for their older forcing
 and analysis notebooks. Other radar-site notes are consolidated here.

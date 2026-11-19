@@ -15,7 +15,7 @@ import xarray as xr
 HRRR = Path('/hdd/snow_hydrology/hrrrak/icefield_domain/netcdf/hrrrak_f567_WY2020-WY2026_utm.nc')
 PITS = Path('/hdd/snow_hydrology/JIF_radar/jif_snow_pit_sites_2021.csv')
 MODEL_ROOT = Path('/home/cassie/python/models/run_snowpack/sites')
-TEMPLATES = Path(__file__).resolve().parent / 'templates'
+TEMPLATES = Path(__file__).resolve().parents[1] / 'templates'
 TEMPLATE = TEMPLATES / 'empty_profile.sno'
 PERIOD = 'WY2020-WY2026'
 SITES = ('tkg2', 'tkg3', 'c161', 'tkg4', 'dg1')

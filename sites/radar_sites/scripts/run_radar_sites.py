@@ -31,7 +31,7 @@ def run_one(job):
         expected_hash = 'f1c11a0ac7e3c9b88810370f0e012f946a5b70073879a400f6f751cde897908f'
         if hashlib.sha256(library.read_bytes()).hexdigest() != expected_hash:
             raise RuntimeError('The empty-column guard is specific to the recorded SNOWPACK build; review before running.')
-        numerical_guard = str(Path(__file__).resolve().parent/'numerics/empty_snow_vapour_guard.gdb')
+        numerical_guard = str(Path(__file__).resolve().parents[1] / 'numerics/empty_snow_vapour_guard.gdb')
         command = ['gdb', '-batch', '-x', numerical_guard, '--args', str(binary), *command[1:]]
     started = datetime.now(timezone.utc).isoformat()
     with log.open('w') as stream:
