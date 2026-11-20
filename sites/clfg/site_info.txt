@@ -1,0 +1,7 @@
+Site: CLFG
+Location: Mendenhall
+Latitude: 58°29'40.99"N (58.4947194444)
+Longitude: 134°32'30.30"W (-134.5417500000)
+Observation date: 2026-05-25
+Snow depth: approximately 2 m
+Observation notes: This is the only available field observation. Time of day and measurement uncertainty were not supplied.

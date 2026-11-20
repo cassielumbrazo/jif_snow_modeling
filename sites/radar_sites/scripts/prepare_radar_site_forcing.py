@@ -103,6 +103,29 @@ def prepare(site, output_root=MODEL_ROOT, hrrr=HRRR, pits=PITS, lapse_rate=0.006
         # Preserve the established model point rather than moving to the pit.
         lat, lon, elevation, slope = 58.63447, -134.23708, 1120.0, 38.0
         east, north = Transformer.from_crs(4326, 32608, always_xy=True).transform(lon, lat)
+    site_metadata = dict(
+        pit_date=str(pit.pit_date),
+        quality_flags='' if pd.isna(pit.quality_flags) else str(pit.quality_flags),
+        datum='Pit horizontal datum provisionally EPSG:32608; vertical datum unconfirmed',
+        pit_source=str(pits),
+        coordinate_source='Existing TKG4 model point' if site == 'tkg4' else '2021 pit inventory',
+    )
+    summary, raw, corrected = prepare_point(
+        site, output_root, hrrr, site_metadata, east=east, north=north, elevation=elevation,
+        lat=lat, lon=lon, slope=slope, lapse_rate=lapse_rate,
+    )
+    run_script = Path(output_root)/site/'run_WY2020-WY2026.sh'
+    command = [sys.executable, str(Path(__file__).resolve().with_name('run_radar_sites.py')),
+               '--model-root', str(Path(output_root).resolve()), '--sites', site, '--workers', '2']
+    run_script.write_text('#!/usr/bin/env bash\nset -euo pipefail\nexec '+shlex.join(command)+'\n')
+    run_script.chmod(0o755)
+    return summary, raw, corrected
+
+
+def prepare_point(site, output_root, hrrr, site_metadata, *, east, north, elevation, lat, lon,
+                  slope=0.0, lapse_rate=0.006, period=PERIOD, start=None, end=None,
+                  corrected_name='hrrrak_lapserate', include_raw=True):
+    """Write point inputs for the requested coverage, with raw forcing optional."""
     with xr.open_dataset(hrrr) as ds:
         if CRS.from_wkt(ds.spatial_ref.attrs['crs_wkt']).to_epsg() != 32608:
             raise ValueError('Expected EPSG:32608')
@@ -111,8 +134,9 @@ def prepare(site, output_root=MODEL_ROOT, hrrr=HRRR, pits=PITS, lapse_rate=0.006
         for v, unit in zip(VARIABLES, UNITS):
             if ds[v].attrs.get('units') != unit:
                 raise ValueError(f'Unexpected {v} units: {ds[v].attrs.get("units")}')
+        ds = ds.sel(time=slice(start, end))
         times = pd.DatetimeIndex(ds.time.values)
-        if times.hasnans or not times.is_unique or not times.is_monotonic_increasing or not (times == times.floor('h')).all():
+        if times.empty or times.hasnans or not times.is_unique or not times.is_monotonic_increasing or not (times == times.floor('h')).all():
             raise ValueError('Expected unique, increasing hourly UTC timestamps')
         if 'valid_time' in ds and not np.array_equal(ds.valid_time.values, ds.time.values):
             raise ValueError('Resolve time/valid_time mismatch')
@@ -134,9 +158,7 @@ def prepare(site, output_root=MODEL_ROOT, hrrr=HRRR, pits=PITS, lapse_rate=0.006
     correction = -lapse_rate * (elevation-frame.orog)
     corrected['TA'] += correction
     pd.testing.assert_frame_equal(raw.drop(columns='TA'), corrected.drop(columns='TA'))
-    summary = dict(site=site, pit_date=str(pit.pit_date), quality_flags='' if pd.isna(pit.quality_flags) else str(pit.quality_flags),
-                   datum='Pit horizontal datum provisionally EPSG:32608; vertical datum unconfirmed',
-                   source=str(hrrr), pit_source=str(pits), latitude=lat, longitude=lon, elevation_m=elevation,
+    summary = dict(**site_metadata, site=site, source=str(hrrr), latitude=lat, longitude=lon, elevation_m=elevation,
                    grid_x_m=float(point.x), grid_y_m=float(point.y),
                    start_UTC=str(expected.min()), end_UTC=str(expected.max()), rows=len(expected),
                    missing_timestamps=[str(t) for t in expected.difference(times)],
@@ -145,23 +167,29 @@ def prepare(site, output_root=MODEL_ROOT, hrrr=HRRR, pits=PITS, lapse_rate=0.006
                    lapse_rate_K_per_m=lapse_rate, correction_min_K=float(correction.min()), correction_max_K=float(correction.max()),
                    slope_angle_deg=slope,
                    initialization='Empty profile, SoilAlbedo 0.4, no glacier ice/firn layers; TKG4 substrate parameters',
-                   experiment='heatflux_soiltemp_zero',
-                   coordinate_source='Existing TKG4 model point' if site == 'tkg4' else '2021 pit inventory')
+                   experiment='heatflux_soiltemp_zero')
+    base = Path(output_root) / site
+    forcings = {corrected_name: corrected}
+    if include_raw:
+        forcings = {'hrrrak': raw, **forcings}
+    for forcing in forcings:
+        stem = base / 'input' / f'{forcing}_{period}' / f'{forcing}_{site}_{period}'
+        products = [stem.with_suffix(ext) for ext in ('.smet', '.sno', '.json')]
+        products.append(base / 'config' / f'{stem.name}.ini')
+        if any(product.exists() for product in products):
+            raise FileExistsError(f'Refusing to overwrite inputs: {stem}')
     template = TEMPLATE.read_text()
-    for forcing, data in [('hrrrak', raw), ('hrrrak_lapserate', corrected)]:
-        station = f'{forcing}_{site}_{PERIOD}'
-        base = Path(output_root)/site
-        target = base/'input'/f'{forcing}_{PERIOD}'
+    for forcing, data in forcings.items():
+        station = f'{forcing}_{site}_{period}'
+        target = base/'input'/f'{forcing}_{period}'
         target.mkdir(parents=True, exist_ok=True)
         for directory in ['config', 'output']:
             (base/directory).mkdir(exist_ok=True)
         stem = target/station
-        if stem.with_suffix('.smet').exists() or stem.with_suffix('.sno').exists():
-            raise FileExistsError(f'Refusing to overwrite inputs: {stem}')
         header = dict(station_id=station, station_name=f'HRRR-AK {site.upper()} {forcing}',
                       latitude=f'{lat:.8f}', longitude=f'{lon:.8f}', easting=east, northing=north,
                       epsg=32608, altitude=elevation, nodata=-999, tz=0,
-                      source='HRRR-AK stored UTM cell; hourly temperature-only lapse correction' if forcing.endswith('lapserate') else 'HRRR-AK stored UTM cell; raw forcing')
+                      source='HRRR-AK stored UTM cell; hourly temperature-only lapse correction' if forcing == corrected_name else 'HRRR-AK stored UTM cell; raw forcing')
         with stem.with_suffix('.smet').open('w') as f:
             f.write('SMET 1.1 ASCII\n[HEADER]\n')
             for key, value in header.items():
@@ -176,7 +204,7 @@ def prepare(site, output_root=MODEL_ROOT, hrrr=HRRR, pits=PITS, lapse_rate=0.006
         config = configparser.ConfigParser(interpolation=None, delimiters=('=',))
         config.optionxform = str
         config.read(TEMPLATES / 'heatflux_soiltemp_zero.ini')
-        relative_input = f'../input/{forcing}_{PERIOD}'
+        relative_input = f'../input/{forcing}_{period}'
         config['Input'].update(METEOPATH=relative_input, STATION1=station+'.smet',
                                SNOW='SMET', SNOWPATH=relative_input,
                                SNOWFILE1=station+'.sno', COLD_START='false')
@@ -184,11 +212,6 @@ def prepare(site, output_root=MODEL_ROOT, hrrr=HRRR, pits=PITS, lapse_rate=0.006
         config['Output']['EXPERIMENT'] = 'heatflux_soiltemp_zero'
         with (base/'config'/f'{station}.ini').open('w') as f:
             config.write(f)
-    run_script = Path(output_root)/site/'run_WY2020-WY2026.sh'
-    command = [sys.executable, str(Path(__file__).resolve().with_name('run_radar_sites.py')),
-               '--model-root', str(Path(output_root).resolve()), '--sites', site, '--workers', '2']
-    run_script.write_text('#!/usr/bin/env bash\nset -euo pipefail\nexec '+shlex.join(command)+'\n')
-    run_script.chmod(0o755)
     return summary, raw, corrected
 
 

@@ -17,6 +17,18 @@ END = '2026-09-29T04:00'
 MODEL_ROOT = Path('/home/cassie/python/models/run_snowpack/sites')
 
 
+def with_empty_column_guard(command):
+    """Wrap a SNOWPACK command with the guard for the verified executable build."""
+    binary = Path(shutil.which('snowpack')).resolve()
+    library = binary.parent.parent/'lib/libsnowpack.so.3.7.0'
+    expected_hash = 'f1c11a0ac7e3c9b88810370f0e012f946a5b70073879a400f6f751cde897908f'
+    if hashlib.sha256(library.read_bytes()).hexdigest() != expected_hash:
+        raise RuntimeError('The empty-column guard is specific to the recorded SNOWPACK build; review before running.')
+    numerical_guard = str(Path(__file__).resolve().parents[1] / 'numerics/empty_snow_vapour_guard.gdb')
+    command = ['gdb', '-batch', '-x', numerical_guard, '--args', str(binary), *command[1:]]
+    return command, numerical_guard
+
+
 def run_one(job):
     site, forcing, root = job
     station = f'{forcing}_{site}_WY2020-WY2026'
@@ -26,13 +38,7 @@ def run_one(job):
     command = ['snowpack', '-c', station+'.ini', '-b', START, '-e', END]
     numerical_guard = None
     if site in {'tkg4','dg1'} and forcing == 'hrrrak':
-        binary = Path(shutil.which('snowpack')).resolve()
-        library = binary.parent.parent/'lib/libsnowpack.so.3.7.0'
-        expected_hash = 'f1c11a0ac7e3c9b88810370f0e012f946a5b70073879a400f6f751cde897908f'
-        if hashlib.sha256(library.read_bytes()).hexdigest() != expected_hash:
-            raise RuntimeError('The empty-column guard is specific to the recorded SNOWPACK build; review before running.')
-        numerical_guard = str(Path(__file__).resolve().parents[1] / 'numerics/empty_snow_vapour_guard.gdb')
-        command = ['gdb', '-batch', '-x', numerical_guard, '--args', str(binary), *command[1:]]
+        command, numerical_guard = with_empty_column_guard(command)
     started = datetime.now(timezone.utc).isoformat()
     with log.open('w') as stream:
         result = subprocess.run(command, cwd=root/site/'config', stdout=stream, stderr=subprocess.STDOUT)
