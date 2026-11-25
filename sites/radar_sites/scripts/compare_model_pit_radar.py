@@ -40,11 +40,14 @@ def load_pits(root=RADAR_ROOT):
     return pd.DataFrame(result).set_index('site')
 
 
-def load_models(root=MODEL_ROOT):
+def load_models(root=MODEL_ROOT, *, runs=None):
+    """Load case names mapped to (filename period, final valid hour)."""
+    if runs is None:
+        runs = {forcing: (PERIOD, '2026-09-29T04:00') for forcing in FORCINGS}
     models, audit = {}, []
     for site in SITES:
-        for forcing in FORCINGS:
-            station = f'{forcing}_{site}_{PERIOD}_heatflux_soiltemp_zero'
+        for forcing, (period, end) in runs.items():
+            station = f'{forcing}_{site}_{period}_heatflux_soiltemp_zero'
             path = Path(root)/site/'output'/f'{station}.smet'
             header, frame = read_smet(path, ['timestamp', 'HS_mod', 'SWE'])
             fields = header['fields'].split()
@@ -56,7 +59,7 @@ def load_models(root=MODEL_ROOT):
                 raise ValueError(f'Review SWE units in {path}')
             # Raw HS_mod is cm; raw SWE is kg/m² = mm water equivalent.
             frame = frame.rename(columns={'HS_mod':'depth_cm', 'SWE':'swe_mm'})
-            expected = pd.date_range('2019-10-01T05:00', '2026-09-29T04:00', freq='h')
+            expected = pd.date_range('2019-10-01T05:00', end, freq='h')
             missing = expected.difference(frame.index)
             if len(missing) or frame.index.min()!=expected.min() or frame.index.max()!=expected.max():
                 raise ValueError(f'Incomplete model output: {path}; {len(missing)} missing hours')
@@ -65,7 +68,7 @@ def load_models(root=MODEL_ROOT):
             models[(site,forcing)] = frame
             audit.append(dict(site=site, forcing=forcing, start_UTC=frame.index.min(),
                               end_UTC=frame.index.max(), rows=len(frame), path=str(path),
-                              numerical_guard='Empty-column LayerToLayer guard' if site in {'tkg4','dg1'} and forcing=='hrrrak' else 'None'))
+                              numerical_guard='Empty-column LayerToLayer guard' if site in {'tkg4','dg1'} and forcing in {'hrrrak', 'topopyscale_1000m', 'topopyscale_500m'} else 'None'))
     return models, pd.DataFrame(audit)
 
 
@@ -172,9 +175,9 @@ def snow_depth_statistics(comparisons):
                 comparisons=int(rows.absolute_difference_cm.count()))
 
 
-def load_comparison(root=MODEL_ROOT, radius=500):
+def load_comparison(root=MODEL_ROOT, radius=500, *, runs=None):
     pits=load_pits()
-    models,audit=load_models(root)
+    models,audit=load_models(root, runs=runs)
     adjusted,baselines=autumn_adjustments(models)
     radar,local,sensitivity=local_radar(pits,radius=radius)
     comparisons=comparison_tables(adjusted,pits,local)

@@ -26,6 +26,7 @@ All five radar sites (DG1, TKG4, TKG3, TKG2, and C161) use the same workflow:
 - [Review forcing and site elevations](notebooks/01_review_radar_site_forcing.ipynb).
 - [Compare model depth/SWE with pits and radar](notebooks/02_compare_model_pit_radar_WY2021.ipynb).
 - [Compare bulk snow density](notebooks/03_compare_bulk_snow_density_WY2021.ipynb).
+- [Compare WY2021 SNOWPACK forcing](notebooks/05_compare_WY2021_topopyscale_forcing.ipynb) for raw HRRR-AK and the 1,000 m and 500 m TopoPyScale cells. The [run script](scripts/run_topopyscale_WY2021.py) replays the raw WY2020 spin-up for both resolutions.
 - Prepare or reuse forcing with [the forcing script](scripts/prepare_radar_site_forcing.py) and run simulations with [the batch runner](scripts/run_radar_sites.py).
 
 Inputs, configurations, logs, and results remain outside this repository at
